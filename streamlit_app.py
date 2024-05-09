@@ -5,14 +5,15 @@ st.title('Crypto Analysis App')
 st.write('Welcome to the Crypto Analysis App. More features coming soon!')
 
 # URL de base pour les fichiers de données sur GitHub
-base_url = 'https://raw.githubusercontent.com/cece070707/crypto-analysis-app/main/Data/'
+base_url = 'https://raw.githubusercontent.com/username/crypto-analysis-app/main/Data/'
 
 # Fonctions de chargement des données
 def load_crypto_data(filename):
     url = f"{base_url}{filename}"
     df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
     df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'Close'}, inplace=True)
-    return df
+    # Sélectionner uniquement les colonnes 'Date_heure' et 'Close'
+    return df[['Date_heure', 'Close']]
 
 # Widget pour choisir une cryptomonnaie
 option = st.selectbox(
@@ -32,5 +33,5 @@ file_names = {
 # Chargement des données en fonction de la sélection
 data = load_crypto_data(file_names[option])
 
-# Affichage des données
-st.write(f"Data for {option}:", data)
+# Affichage des données avec st.dataframe pour un meilleur rendu
+st.dataframe(data)
