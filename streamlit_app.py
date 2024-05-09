@@ -33,5 +33,10 @@ file_names = {
 # Chargement des données en fonction de la sélection
 data = load_crypto_data(file_names[option])
 
-# Affichage des données avec st.dataframe pour un meilleur rendu
-st.dataframe(data)
+# Barre de recherche
+search_value = st.text_input("Search by Date/Time or Close Value:")
+if search_value:
+    filtered_data = data[data.apply(lambda x: search_value.lower() in x.astype(str).lower(), axis=1)]
+    st.dataframe(filtered_data)
+else:
+    st.dataframe(data)
