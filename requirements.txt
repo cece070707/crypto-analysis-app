@@ -2,3 +2,6 @@ streamlit
 pandas
 yfinance
 
+git add requirements.txt
+git commit -m "Correct yfinance package name in requirements.txt"
+git push
