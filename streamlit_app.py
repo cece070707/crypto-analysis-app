@@ -4,47 +4,33 @@ import pandas as pd
 st.title('Crypto Analysis App')
 st.write('Welcome to the Crypto Analysis App. More features coming soon!')
 
-git add Dataset/*
-git commit -m "Add data files for the app"
-git push origin main
+# URL de base pour les fichiers de données sur GitHub
+base_url = 'https://raw.githubusercontent.com/cece070707/crypto-analysis-app/main/Data/'
 
-
-
-
-# Définir les chemins ici si nécessaire
-chemin_de_base = 'files/Project/'
+# Fonctions de chargement des données
+def load_crypto_data(filename):
+    url = f"{base_url}{filename}"
+    df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
+    df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'Close'}, inplace=True)
+    return df
 
 # Widget pour choisir une cryptomonnaie
 option = st.selectbox(
    'Which cryptocurrency data would you like to see?',
    ('ADA Cardano', 'BCH Bitcoin Cash', 'BTC Bitcoin', 'ETH Ethereum', 'LTC Litecoin', 'XRP Ripple'))
 
-# Fonctions de chargement des données
-def load_crypto_data(file_path):
-    df = pd.read_csv(file_path, delimiter=';', decimal=',', skiprows=1)
-    df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'Close'}, inplace=True)
-    return df
-
-def load_telegram_data(file_path):
-    df = pd.read_csv(file_path, delimiter=';', decimal=',')
-    df.drop(df.columns[0], axis=1, inplace=True)
-    return df
+# Dictionnaire de correspondance des noms de fichiers
+file_names = {
+    'ADA Cardano': 'ADA_Cardano.csv',
+    'BCH Bitcoin Cash': 'BCH_Bitcoin_cash.csv',
+    'BTC Bitcoin': 'BTC_Bitcoin.csv',
+    'ETH Ethereum': 'ETH_Ethereum.csv',
+    'LTC Litecoin': 'LTC_Litecoin.csv',
+    'XRP Ripple': 'XRP_Ripple.csv'
+}
 
 # Chargement des données en fonction de la sélection
-if option == 'ADA Cardano':
-    data = load_crypto_data(chemin_de_base + 'ADA_Cardano.csv')
-elif option == 'BCH Bitcoin Cash':
-    data = load_crypto_data(chemin_de_base + 'BCH_Bitcoin_cash.csv')
-elif option == 'BTC Bitcoin':
-    data = load_crypto_data(chemin_de_base + 'BTC_Bitcoin.csv')
-elif option == 'ETH Ethereum':
-    data = load_crypto_data(chemin_de_base + 'ETH_Ethereum.csv')
-elif option == 'LTC Litecoin':
-    data = load_crypto_data(chemin_de_base + 'LTC_Litecoin.csv')
-elif option == 'XRP Ripple':
-    data = load_crypto_data(chemin_de_base + 'XRP_Ripple.csv')
+data = load_crypto_data(file_names[option])
 
 # Affichage des données
 st.write(f"Data for {option}:", data)
-
-# Vous pouvez également ajouter ici la fonction pour afficher les graphiques si vous en avez.
