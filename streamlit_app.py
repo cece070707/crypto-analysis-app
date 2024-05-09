@@ -4,6 +4,13 @@ import pandas as pd
 st.title('Crypto Analysis App')
 st.write('Welcome to the Crypto Analysis App. More features coming soon!')
 
+git add Dataset/*
+git commit -m "Add data files for the app"
+git push origin main
+
+
+
+
 # Définir les chemins ici si nécessaire
 chemin_de_base = 'files/Project/'
 
