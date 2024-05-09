@@ -1,39 +1,43 @@
 import streamlit as st
 import pandas as pd
-import yfinance as yf
 
 st.title('Crypto Analysis App')
-st.write('Welcome to the Crypto Analysis App. Explore real-time and historical market data!')
+st.write('Welcome to the Crypto Analysis App. More features coming soon!')
 
-@st.cache
-def load_crypto_data(ticker):
-    data = yf.download(ticker, start="2023-01-01", end="2023-12-31", progress=False)
-    data.reset_index(inplace=True)
-    data.rename(columns={"Date": "Date_heure", "Close": "price"}, inplace=True)
-    return data[['Date_heure', 'price']]
+# URL de base pour les fichiers de données sur GitHub
+base_url = 'https://raw.githubusercontent.com/cece070707/crypto-analysis-app/main/Data/'
 
-cryptos = {
-    'ADA Cardano': 'ADA-USD',
-    'BCH Bitcoin Cash': 'BCH-USD',
-    'BTC Bitcoin': 'BTC-USD',
-    'ETH Ethereum': 'ETH-USD',
-    'LTC Litecoin': 'LTC-USD',
-    'XRP Ripple': 'XRP-USD'
-}
+# Fonctions de chargement des données
+def load_crypto_data(filename):
+    url = f"{base_url}{filename}"
+    df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
+    df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'Close'}, inplace=True)
+    # Sélectionner uniquement les colonnes 'Date_heure' et 'Close'
+    return df[['Date_heure', 'Close']]
 
+# Widget pour choisir une cryptomonnaie
 option = st.selectbox(
    'Which cryptocurrency data would you like to see?',
-   list(cryptos.keys()))
+   ('ADA Cardano', 'BCH Bitcoin Cash', 'BTC Bitcoin', 'ETH Ethereum', 'LTC Litecoin', 'XRP Ripple'))
 
-data = load_crypto_data(cryptos[option])
+# Dictionnaire de correspondance des noms de fichiers
+file_names = {
+    'ADA Cardano': 'ADA_Cardano.csv',
+    'BCH Bitcoin Cash': 'BCH_Bitcoin_cash.csv',
+    'BTC Bitcoin': 'BTC_Bitcoin.csv',
+    'ETH Ethereum': 'ETH_Ethereum.csv',
+    'LTC Litecoin': 'LTC_Litecoin.csv',
+    'XRP Ripple': 'XRP_Ripple.csv'
+}
 
-search_column = st.selectbox('Select column to search:', ['Date_heure', 'price'])
+# Chargement des données en fonction de la sélection
+data = load_crypto_data(file_names[option])
+
+# Barre de recherche
 search_value = st.text_input("Search by Date/Time or Close Value:")
 if search_value:
-    filtered_data = data[data[search_column].astype(str).str.contains(search_value, case=False)]
+    filtered_data = data[data.apply(lambda x: search_value.lower() in x.astype(str).lower(), axis=1)]
     st.dataframe(filtered_data)
 else:
     st.dataframe(data)
 
-if st.button('Show Chart'):
-    st.line_chart(data.set_index('Date_heure')['price'])
