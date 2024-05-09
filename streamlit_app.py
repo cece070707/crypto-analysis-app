@@ -1,31 +1,31 @@
 import streamlit as st
 import pandas as pd
-import requests
+import yfinance as yf
 
 st.title('Crypto Analysis App')
-st.write('Welcome to the Crypto Analysis App. More features coming soon!')
+st.write('Welcome to the Crypto Analysis App. Explore real-time and historical market data!')
 
 @st.cache
-def load_crypto_data(api_url):
-    response = requests.get(api_url)
-    data = pd.DataFrame(response.json())
-    data['Date_heure'] = pd.to_datetime(data['timestamp']).dt.strftime('%Y-%m-%d %H:%M:%S')
+def load_crypto_data(ticker):
+    data = yf.download(ticker, start="2023-01-01", end="2023-12-31", progress=False)
+    data.reset_index(inplace=True)
+    data.rename(columns={"Date": "Date_heure", "Close": "price"}, inplace=True)
     return data[['Date_heure', 'price']]
+
+cryptos = {
+    'ADA Cardano': 'ADA-USD',
+    'BCH Bitcoin Cash': 'BCH-USD',
+    'BTC Bitcoin': 'BTC-USD',
+    'ETH Ethereum': 'ETH-USD',
+    'LTC Litecoin': 'LTC-USD',
+    'XRP Ripple': 'XRP-USD'
+}
 
 option = st.selectbox(
    'Which cryptocurrency data would you like to see?',
-   ('ADA Cardano', 'BCH Bitcoin Cash', 'BTC Bitcoin', 'ETH Ethereum', 'LTC Litecoin', 'XRP Ripple'))
+   list(cryptos.keys()))
 
-api_urls = {
-    'ADA Cardano': 'https://api.example.com/ADA',
-    'BCH Bitcoin Cash': 'https://api.example.com/BCH',
-    'BTC Bitcoin': 'https://api.example.com/BTC',
-    'ETH Ethereum': 'https://api.example.com/ETH',
-    'LTC Litecoin': 'https://api.example.com/LTC',
-    'XRP Ripple': 'https://api.example.com/XRP'
-}
-
-data = load_crypto_data(api_urls[option])
+data = load_crypto_data(cryptos[option])
 
 search_column = st.selectbox('Select column to search:', ['Date_heure', 'price'])
 search_value = st.text_input("Search by Date/Time or Close Value:")
@@ -37,4 +37,3 @@ else:
 
 if st.button('Show Chart'):
     st.line_chart(data.set_index('Date_heure')['price'])
-
