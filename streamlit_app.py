@@ -1,43 +1,53 @@
 import streamlit as st
 import pandas as pd
+import yfinance as yf
+from datetime import datetime
 
 st.title('Crypto Analysis App')
-st.write('Welcome to the Crypto Analysis App. More features coming soon!')
+st.write('Welcome to the Crypto Analysis App. Explore real-time and historical market data!')
 
-# URL de base pour les fichiers de données sur GitHub
-base_url = 'https://raw.githubusercontent.com/cece070707/crypto-analysis-app/main/Data/'
-
-# Fonctions de chargement des données
-def load_crypto_data(filename):
-    url = f"{base_url}{filename}"
+# Fonction pour charger les données historiques
+def load_historical_data(filename):
+    url = f"https://raw.githubusercontent.com/cece070707/crypto-analysis-app/main/Data/{filename}"
     df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
-    df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'Close'}, inplace=True)
-    # Sélectionner uniquement les colonnes 'Date_heure' et 'Close'
-    return df[['Date_heure', 'Close']]
+    df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'price'}, inplace=True)
+    return df
 
-# Widget pour choisir une cryptomonnaie
-option = st.selectbox(
-   'Which cryptocurrency data would you like to see?',
-   ('ADA Cardano', 'BCH Bitcoin Cash', 'BTC Bitcoin', 'ETH Ethereum', 'LTC Litecoin', 'XRP Ripple'))
+@st.cache
+def load_recent_data(ticker):
+    end_date = datetime.now().strftime('%Y-%m-%d')
+    data = yf.download(ticker, start="2024-04-11", end=end_date, interval='1d', progress=False)
+    data.reset_index(inplace=True)
+    data.rename(columns={"Date": "Date_heure", "Close": "price"}, inplace=True)
+    return data[['Date_heure', 'price']]
 
-# Dictionnaire de correspondance des noms de fichiers
-file_names = {
-    'ADA Cardano': 'ADA_Cardano.csv',
-    'BCH Bitcoin Cash': 'BCH_Bitcoin_cash.csv',
-    'BTC Bitcoin': 'BTC_Bitcoin.csv',
-    'ETH Ethereum': 'ETH_Ethereum.csv',
-    'LTC Litecoin': 'LTC_Litecoin.csv',
-    'XRP Ripple': 'XRP_Ripple.csv'
+# Dictionnaire de correspondance des noms de fichiers et tickers
+crypto_assets = {
+    'ADA Cardano': ('ADA_Cardano.csv', 'ADA-USD'),
+    'BCH Bitcoin Cash': ('BCH_Bitcoin_cash.csv', 'BCH-USD'),
+    'BTC Bitcoin': ('BTC_Bitcoin.csv', 'BTC-USD'),
+    'ETH Ethereum': ('ETH_Ethereum.csv', 'ETH-USD'),
+    'LTC Litecoin': ('LTC_Litecoin.csv', 'LTC-USD'),
+    'XRP Ripple': ('XRP_Ripple.csv', 'XRP-USD')
 }
 
-# Chargement des données en fonction de la sélection
-data = load_crypto_data(file_names[option])
+option = st.selectbox('Which cryptocurrency data would you like to see?', list(crypto_assets.keys()))
+historical_data = load_historical_data(crypto_assets[option][0])
+recent_data = load_recent_data(crypto_assets[option][1])
 
-# Barre de recherche
-search_value = st.text_input("Search by Date/Time or Close Value:")
+# Fusion des données
+full_data = pd.concat([historical_data, recent_data]).reset_index(drop=True)
+
+# Recherche par date ou prix
+search_value = st.text_input("Search by Date/Time or Price:")
 if search_value:
-    filtered_data = data[data.apply(lambda x: search_value.lower() in x.astype(str).lower(), axis=1)]
-    st.dataframe(filtered_data)
+    try:
+        search_result = full_data[full_data['Date_heure'].str.contains(search_value)]
+    except:
+        search_result = full_data[full_data['price'].astype(str).str.contains(search_value)]
+    st.dataframe(search_result)
 else:
-    st.dataframe(data)
+    st.dataframe(full_data)
 
+if st.button('Show Chart'):
+    st.line_chart(full_data.set_index('Date_heure')['price'])
