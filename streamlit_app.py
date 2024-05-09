@@ -33,5 +33,15 @@ file_names = {
 # Chargement des données en fonction de la sélection
 data = load_crypto_data(file_names[option])
 
-# Affichage des données avec st.dataframe pour un meilleur rendu
-st.dataframe(data)
+# Styliser les données
+def highlight_cols(s):
+    return ['background-color: #f0f9e8' if s.name in ['Close'] else 'background-color: #fffff9' for v in s]
+
+# Affichage des données sans index et avec style
+st.dataframe(data.style.apply(highlight_cols, axis=0).hide_index())
+
+# Barre de recherche (optionnel)
+st.write("Search Data:")
+search_query = st.text_input("Enter Date/Close value to search:")
+filtered_data = data[data.apply(lambda row: row.astype(str).str.contains(search_query, case=False).any(), axis=1)]
+st.dataframe(filtered_data.style.apply(highlight_cols, axis=0).hide_index())
