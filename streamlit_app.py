@@ -10,18 +10,26 @@ st.write('Welcome to the Crypto Analysis App. Explore real-time and historical m
 # Fonctions de chargement des données
 def load_historical_data(filename):
     url = f"https://raw.githubusercontent.com/cece070707/crypto-analysis-app/main/Data/{filename}"
-    df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
-    df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'price'}, inplace=True)
-    df['Date_heure'] = pd.to_datetime(df['Date_heure'])  # Assurer que les dates sont au format datetime
+    try:
+        df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
+        df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'price'}, inplace=True)
+        df['Date_heure'] = pd.to_datetime(df['Date_heure'], errors='coerce')  # Assurer que les dates sont au format datetime et gérer les erreurs
+    except Exception as e:
+        st.error(f"Failed to load historical data: {e}")
+        return pd.DataFrame()  # Retournez un DataFrame vide en cas d'erreur
     return df
 
 @st.cache
 def load_recent_data(ticker):
     end_date = datetime.now().strftime('%Y-%m-%d')
-    data = yf.download(ticker, start="2024-04-11", end=end_date, interval='1d', progress=False)
-    data.reset_index(inplace=True)
-    data.rename(columns={"Date": "Date_heure", "Close": "price"}, inplace=True)
-    data['Date_heure'] = pd.to_datetime(data['Date_heure'])
+    try:
+        data = yf.download(ticker, start="2024-04-11", end=end_date, interval='1d', progress=False)
+        data.reset_index(inplace=True)
+        data.rename(columns={"Date": "Date_heure", "Close": "price"}, inplace=True)
+        data['Date_heure'] = pd.to_datetime(data['Date_heure'], errors='coerce')
+    except Exception as e:
+        st.error(f"Failed to load recent data: {e}")
+        return pd.DataFrame()
     return data[['Date_heure', 'price']]
 
 # Fonction pour créer un graphique Plotly
@@ -64,3 +72,4 @@ else:
 if st.button('Show Chart'):
     fig = create_price_chart(full_data, title=f"{option} Price Over Time")
     st.plotly_chart(fig)
+
