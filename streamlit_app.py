@@ -23,7 +23,8 @@ def load_crypto_data(filename):
     url = f"{base_url}{filename}"
     df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
     df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'price'}, inplace=True)
-    df['Date_heure'] = pd.to_datetime(df['Date_heure'], errors='coerce')  # Convertir les dates
+    # Conversion des dates avec le format spécifié
+    df['Date_heure'] = pd.to_datetime(df['Date_heure'], format='%d/%m/%Y %H:%M', errors='coerce')
     return df[['Date_heure', 'price']]
 
 def load_recent_data(ticker):
@@ -76,14 +77,4 @@ st.plotly_chart(recent_fig)
 # Barre de recherche
 search_value = st.text_input("Search by Date/Time or Close Value:")
 if search_value:
-    filtered_data = data[data.apply(lambda row: search_value.lower() in row.astype(str).lower(), axis=1)]
-    st.dataframe(filtered_data)
-else:
-    st.dataframe(data)
-
-# Affichage des nouvelles (Remplacez 'your_api_key' par votre clé API de NewsAPI)
-api_key = 'your_api_key'
-news_items = get_news(api_key, option)
-st.write("Latest News")
-for item in news_items:
-    st.write(f"{item['title']} - {item['description']}")
+    filtered_data = data[data
