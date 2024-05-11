@@ -73,11 +73,17 @@ recent_data = load_recent_data(ticker_map[option])
 recent_fig = plot_crypto_price(recent_data, f"{option} Price Last 2 Years")
 st.plotly_chart(recent_fig)
 
+# Barre de recherche
+search_value = st.text_input("Search by Date/Time or Close Value:")
+if search_value:
+    filtered_data = data[data.apply(lambda row: search_value.lower() in row.astype(str).lower(), axis=1)]
+    st.dataframe(filtered_data)
+else:
+    st.dataframe(data)
+
 # Affichage des nouvelles (Remplacez 'your_api_key' par votre clé API de NewsAPI)
 api_key = 'your_api_key'
 news_items = get_news(api_key, option)
 st.write("Latest News")
 for item in news_items:
     st.write(f"{item['title']} - {item['description']}")
-
-
