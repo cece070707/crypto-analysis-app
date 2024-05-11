@@ -58,10 +58,10 @@ def get_news(api_key, q):
 
 # Affichage du titre et description de l'application
 st.title('Database of Cardano for Analysis')
-st.write('This database has been utilized to study the various fluctuations in the price of this cryptocurrency.')
 
 tabs = st.tabs(["Data View", "Investment Advice", "Telegram Access", "Sentiment Analysis"])
 with tabs[0]:
+    st.write('This database has been utilized to study the various fluctuations in the price of this cryptocurrency.')
     option = st.selectbox(
         'Which cryptocurrency data would you like to see?',
         list(ticker_map.keys())
@@ -86,12 +86,9 @@ with tabs[2]:
     st.write("Join our Telegram groups to stay updated.")
 
 with tabs[3]:
-    # Add your sentiment analysis module here
     st.write("Sentiment analysis results will be displayed here.")
-    # Example of accepting user input for sentiment analysis
     user_input = st.text_input("Enter a message to analyze:")
     if user_input:
-        # Add your sentiment analysis function call here
         st.write("Sentiment analysis result: Neutral / Positive / Negative")
 
 # Affichage des nouvelles
