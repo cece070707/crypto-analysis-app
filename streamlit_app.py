@@ -23,9 +23,17 @@ def load_crypto_data(filename):
     url = f"{base_url}{filename}"
     df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
     df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'price'}, inplace=True)
+
     # Conversion des dates avec le format spécifié
     df['Date_heure'] = pd.to_datetime(df['Date_heure'], format='%d/%m/%Y %H:%M', errors='coerce')
+
+    # Ajout de débogage pour vérifier les entrées où la conversion a échoué
+    if df['Date_heure'].isna().any():
+        failed_conversions = df[df['Date_heure'].isna()]
+        print("Les conversions de date suivantes ont échoué (premières 5 entrées) :", failed_conversions.head())
+
     return df[['Date_heure', 'price']]
+
 
 def load_recent_data(ticker):
     """Charge les données des deux dernières années depuis Yahoo Finance."""
