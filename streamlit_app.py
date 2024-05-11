@@ -57,8 +57,8 @@ def get_news(api_key, q):
     return articles
 
 # Affichage du titre et description de l'application
-st.title('Crypto Analysis App')
-st.write('Welcome to the Crypto Analysis App. Explore real-time and historical market data!')
+st.title('Database of Cardano for Analysis')
+st.write('This database has been utilized to study the various fluctuations in the price of this cryptocurrency.')
 
 # Widget pour choisir une cryptomonnaie
 option = st.selectbox(
@@ -68,12 +68,6 @@ option = st.selectbox(
 
 # Chargement et affichage des données historiques et récentes
 data = load_crypto_data(f"{option.replace(' ', '_')}.csv")
-fig = plot_crypto_price(data, f"{option} Historical Price Over Time")
-st.plotly_chart(fig)
-
-recent_data = load_recent_data(ticker_map[option])
-recent_fig = plot_crypto_price(recent_data, f"{option} Price Last 2 Years")
-st.plotly_chart(recent_fig)
 
 # Barre de recherche et affichage du tableau complet
 search_value = st.text_input("Search by Date/Time or Close Value:")
@@ -83,9 +77,17 @@ if search_value:
 else:
     st.dataframe(data)
 
+fig = plot_crypto_price(data, f"{option} Historical Price Over Time")
+st.plotly_chart(fig)
+
+recent_data = load_recent_data(ticker_map[option])
+recent_fig = plot_crypto_price(recent_data, f"{option} Price Last 2 Years")
+st.plotly_chart(recent_fig)
+
 # Affichage des nouvelles
 api_key = 'your_api_key'
 news_items = get_news(api_key, option)
 st.write("Latest News")
 for item in news_items:
     st.write(f"{item['title']} - {item['description']}")
+
