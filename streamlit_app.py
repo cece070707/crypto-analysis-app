@@ -60,29 +60,39 @@ def get_news(api_key, q):
 st.title('Database of Cardano for Analysis')
 st.write('This database has been utilized to study the various fluctuations in the price of this cryptocurrency.')
 
-# Widget pour choisir une cryptomonnaie
-option = st.selectbox(
-    'Which cryptocurrency data would you like to see?',
-    list(ticker_map.keys())
-)
+tabs = st.tabs(["Data View", "Investment Advice", "Telegram Access", "Sentiment Analysis"])
+with tabs[0]:
+    option = st.selectbox(
+        'Which cryptocurrency data would you like to see?',
+        list(ticker_map.keys())
+    )
+    data = load_crypto_data(f"{option.replace(' ', '_')}.csv")
+    search_value = st.text_input("Search by Date/Time or Close Value:")
+    if search_value:
+        filtered_data = data[data.apply(lambda row: search_value.lower() in row.astype(str).lower(), axis=1)]
+        st.dataframe(filtered_data)
+    else:
+        st.dataframe(data)
+    fig = plot_crypto_price(data, f"{option} Historical Price Over Time")
+    st.plotly_chart(fig)
+    recent_data = load_recent_data(ticker_map[option])
+    recent_fig = plot_crypto_price(recent_data, f"{option} Price Last 2 Years")
+    st.plotly_chart(recent_fig)
 
-# Chargement et affichage des données historiques et récentes
-data = load_crypto_data(f"{option.replace(' ', '_')}.csv")
+with tabs[1]:
+    st.write("Here you can find advice on cryptocurrency investments.")
 
-# Barre de recherche et affichage du tableau complet
-search_value = st.text_input("Search by Date/Time or Close Value:")
-if search_value:
-    filtered_data = data[data.apply(lambda row: search_value.lower() in row.astype(str).lower(), axis=1)]
-    st.dataframe(filtered_data)
-else:
-    st.dataframe(data)
+with tabs[2]:
+    st.write("Join our Telegram groups to stay updated.")
 
-fig = plot_crypto_price(data, f"{option} Historical Price Over Time")
-st.plotly_chart(fig)
-
-recent_data = load_recent_data(ticker_map[option])
-recent_fig = plot_crypto_price(recent_data, f"{option} Price Last 2 Years")
-st.plotly_chart(recent_fig)
+with tabs[3]:
+    # Add your sentiment analysis module here
+    st.write("Sentiment analysis results will be displayed here.")
+    # Example of accepting user input for sentiment analysis
+    user_input = st.text_input("Enter a message to analyze:")
+    if user_input:
+        # Add your sentiment analysis function call here
+        st.write("Sentiment analysis result: Neutral / Positive / Negative")
 
 # Affichage des nouvelles
 api_key = 'your_api_key'
@@ -90,4 +100,3 @@ news_items = get_news(api_key, option)
 st.write("Latest News")
 for item in news_items:
     st.write(f"{item['title']} - {item['description']}")
-
