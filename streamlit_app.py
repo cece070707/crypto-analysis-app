@@ -85,4 +85,4 @@ st.plotly_chart(recent_fig)
 # Barre de recherche
 search_value = st.text_input("Search by Date/Time or Close Value:")
 if search_value:
-    filtered_data = data[data
+    filtered_data = data[data]
