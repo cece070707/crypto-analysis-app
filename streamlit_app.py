@@ -23,17 +23,11 @@ def load_crypto_data(filename):
     url = f"{base_url}{filename}"
     df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
     df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'price'}, inplace=True)
-
-    # Conversion des dates avec le format spécifié
     df['Date_heure'] = pd.to_datetime(df['Date_heure'], format='%d/%m/%Y %H:%M', errors='coerce')
-
-    # Ajout de débogage pour vérifier les entrées où la conversion a échoué
     if df['Date_heure'].isna().any():
         failed_conversions = df[df['Date_heure'].isna()]
         print("Les conversions de date suivantes ont échoué (premières 5 entrées) :", failed_conversions.head())
-
     return df[['Date_heure', 'price']]
-
 
 def load_recent_data(ticker):
     """Charge les données des deux dernières années depuis Yahoo Finance."""
@@ -72,17 +66,26 @@ option = st.selectbox(
     list(ticker_map.keys())
 )
 
-# Chargement et affichage des données historiques
+# Chargement et affichage des données historiques et récentes
 data = load_crypto_data(f"{option.replace(' ', '_')}.csv")
 fig = plot_crypto_price(data, f"{option} Historical Price Over Time")
 st.plotly_chart(fig)
 
-# Chargement et affichage des données récentes
 recent_data = load_recent_data(ticker_map[option])
 recent_fig = plot_crypto_price(recent_data, f"{option} Price Last 2 Years")
 st.plotly_chart(recent_fig)
 
-# Barre de recherche
+# Barre de recherche et affichage du tableau complet
 search_value = st.text_input("Search by Date/Time or Close Value:")
 if search_value:
-    filtered_data = data[data]
+    filtered_data = data[data.apply(lambda row: search_value.lower() in row.astype(str).lower(), axis=1)]
+    st.dataframe(filtered_data)
+else:
+    st.dataframe(data)
+
+# Affichage des nouvelles
+api_key = 'your_api_key'
+news_items = get_news(api_key, option)
+st.write("Latest News")
+for item in news_items:
+    st.write(f"{item['title']} - {item['description']}")
