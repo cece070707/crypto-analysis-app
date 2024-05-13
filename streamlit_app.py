@@ -4,6 +4,8 @@ import yfinance as yf
 import plotly.graph_objs as go
 from datetime import datetime
 import requests
+import plotly.express as px
+
 
 @st.cache
 def load_telegram_data():
@@ -38,6 +40,9 @@ def filter_telegram_data(df, channel_filter, sentiment_filter, keyword):
 
 # Visualization of sentiment distribution
 def plot_sentiment_distribution(df):
+    if df.empty:
+        st.warning("No data available to display after applying filters.")
+        return None
     sentiment_counts = df['sentiment_type'].value_counts().reset_index()
     sentiment_counts.columns = ['sentiment_type', 'count']
     fig = px.bar(sentiment_counts, x='sentiment_type', y='count', color='sentiment_type',
@@ -46,6 +51,7 @@ def plot_sentiment_distribution(df):
                  color_discrete_map={'POSITIVE': 'green', 'NEGATIVE': 'red', 'NEUTRAL': 'orange'})
     fig.update_layout(xaxis_title='Sentiment Type', yaxis_title='Number of Messages')
     return fig
+
 
 # Configuration de l'URL de base pour les fichiers de données et des tickers Yahoo Finance
 base_url = 'https://raw.githubusercontent.com/cece070707/crypto-analysis-app/main/Data/'
@@ -151,7 +157,11 @@ with tabs[2]:
     
     # Générer et afficher le graphique de distribution des sentiments
     fig = plot_sentiment_distribution(filtered_data)
+if fig is not None:
     st.plotly_chart(fig)
+else:
+    st.error("Failed to generate sentiment distribution chart.")
+
 
     
     # Display general news as in other tabs
