@@ -14,10 +14,11 @@ def load_telegram_data():
     ]
     data_frames = []
     for file in files:
-        df = pd.read_csv(file)
+        df = pd.read_csv(file, sep=';', engine='python')  # Ajout de sep=';' pour spécifier le séparateur
         data_frames.append(df)
     combined_df = pd.concat(data_frames, ignore_index=True)
     return combined_df
+
 
 # Define the color mapping for sentiment display
 def apply_color(val):
