@@ -26,7 +26,7 @@ def load_crypto_data(filename):
     df['Date_heure'] = pd.to_datetime(df['Date_heure'], format='%d/%m/%Y %H:%M', errors='coerce')
     if df['Date_heure'].isna().any():
         failed_conversions = df[df['Date_heure'].isna()]
-        print("Les conversions de date suivantes ont échoué (premières 5 entrées) :", failed_conversions.head())
+        st.error("Les conversions de date suivantes ont échoué (premières 5 entrées) :", failed_conversions.head())
     return df[['Date_heure', 'price']]
 
 def load_recent_data(ticker):
@@ -49,17 +49,23 @@ def plot_crypto_price(data, title):
     )
     return fig
 
-def get_news(api_key, q):
-    """Récupère les nouvelles financières depuis une API de nouvelles."""
-    url = f"https://newsapi.org/v2/everything?q={q}&apiKey={api_key}"
+def get_news(api_key, q, category=""):
+    """Fetches news from NewsAPI, filtered by query and category."""
+    base_url = "https://newsapi.org/v2/everything?"
+    search_query = q if not category else f"{q} AND {category}"
+    url = f"{base_url}q={search_query}&apiKey={api_key}"
     response = requests.get(url)
-    articles = response.json().get('articles', [])
-    return articles
+    if response.status_code == 200:
+        articles = response.json().get('articles', [])
+        return articles
+    else:
+        st.error(f"Failed to fetch news: HTTP {response.status_code}")
+        return []
 
-# Affichage du titre et description de l'application
-st.title('Database of Cardano for Analysis')
+api_key = 'c9c5cccd294f4fb2a51ced5ed618de86'  # Your real API key
 
 tabs = st.tabs(["Data View", "Investment Advice", "Telegram Access", "Sentiment Analysis"])
+
 with tabs[0]:
     st.write('This database has been utilized to study the various fluctuations in the price of this cryptocurrency.')
     option = st.selectbox(
@@ -67,33 +73,33 @@ with tabs[0]:
         list(ticker_map.keys())
     )
     data = load_crypto_data(f"{option.replace(' ', '_')}.csv")
-    search_value = st.text_input("Search by Date/Time or Close Value:")
-    if search_value:
-        filtered_data = data[data.apply(lambda row: search_value.lower() in row.astype(str).lower(), axis=1)]
-        st.dataframe(filtered_data)
-    else:
-        st.dataframe(data)
+    st.dataframe(data)
     fig = plot_crypto_price(data, f"{option} Historical Price Over Time")
     st.plotly_chart(fig)
     recent_data = load_recent_data(ticker_map[option])
     recent_fig = plot_crypto_price(recent_data, f"{option} Price Last 2 Years")
     st.plotly_chart(recent_fig)
 
+    # Fetch crypto-specific news in the first tab
+    crypto_news_items = get_news(api_key, option, category="cryptocurrency")
+    st.write("Latest Cryptocurrency News")
+    for item in crypto_news_items:
+        st.write(f"{item['title']} - {item['description']}")
+
 with tabs[1]:
     st.write("Here you can find advice on cryptocurrency investments.")
+    general_news_items = get_news(api_key, "investment")
+    for item in general_news_items:
+        st.write(f"{item['title']} - {item['description']}")
 
 with tabs[2]:
     st.write("Join our Telegram groups to stay updated.")
+    general_news_items = get_news(api_key, "telegram")
+    for item in general_news_items:
+        st.write(f"{item['title']} - {item['description']}")
 
 with tabs[3]:
     st.write("Sentiment analysis results will be displayed here.")
-    user_input = st.text_input("Enter a message to analyze:")
-    if user_input:
-        st.write("Sentiment analysis result: Neutral / Positive / Negative")
-
-# Affichage des nouvelles
-api_key = 'your_api_key'
-news_items = get_news(api_key, option)
-st.write("Latest News")
-for item in news_items:
-    st.write(f"{item['title']} - {item['description']}")
+    general_news_items = get_news(api_key, "sentiment analysis")
+    for item in general_news_items:
+        st.write(f"{item['title']} - {item['description']}")
