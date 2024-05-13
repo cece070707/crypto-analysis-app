@@ -57,10 +57,13 @@ def get_news(api_key, q, category=""):
     response = requests.get(url)
     if response.status_code == 200:
         articles = response.json().get('articles', [])
-        return articles
+        # Convert to DataFrame for better display
+        news_df = pd.DataFrame(articles)
+        news_df = news_df[['title', 'description']]
+        return news_df
     else:
         st.error(f"Failed to fetch news: HTTP {response.status_code}")
-        return []
+        return pd.DataFrame()
 
 api_key = 'c9c5cccd294f4fb2a51ced5ed618de86'  # Your real API key
 
@@ -81,25 +84,21 @@ with tabs[0]:
     st.plotly_chart(recent_fig)
 
     # Fetch crypto-specific news in the first tab
-    crypto_news_items = get_news(api_key, option, category="cryptocurrency")
-    st.write("Latest Cryptocurrency News")
-    for item in crypto_news_items:
-        st.write(f"{item['title']} - {item['description']}")
+    st.markdown("**Latest Cryptocurrency News**")
+    crypto_news_df = get_news(api_key, option, category="cryptocurrency")
+    st.dataframe(crypto_news_df)
 
 with tabs[1]:
-    st.write("Here you can find advice on cryptocurrency investments.")
-    general_news_items = get_news(api_key, "investment")
-    for item in general_news_items:
-        st.write(f"{item['title']} - {item['description']}")
+    st.markdown("**Latest News on Investment Advice**")
+    investment_news_df = get_news(api_key, "investment")
+    st.dataframe(investment_news_df)
 
 with tabs[2]:
-    st.write("Join our Telegram groups to stay updated.")
-    general_news_items = get_news(api_key, "telegram")
-    for item in general_news_items:
-        st.write(f"{item['title']} - {item['description']}")
+    st.markdown("**Latest News on Telegram Access**")
+    telegram_news_df = get_news(api_key, "telegram")
+    st.dataframe(telegram_news_df)
 
 with tabs[3]:
-    st.write("Sentiment analysis results will be displayed here.")
-    general_news_items = get_news(api_key, "sentiment analysis")
-    for item in general_news_items:
-        st.write(f"{item['title']} - {item['description']}")
+    st.markdown("**Latest News on Sentiment Analysis**")
+    sentiment_news_df = get_news(api_key, "sentiment analysis")
+    st.dataframe(sentiment_news_df)
