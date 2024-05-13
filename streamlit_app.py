@@ -16,7 +16,7 @@ ticker_map = {
     'XRP Ripple': 'XRP-USD'
 }
 
-# Configuration des fonctions de traitement des données et de l'API
+# Fonctions de traitement des données, chargement des données récentes et affichage des prix
 def load_crypto_data(filename):
     url = f"{base_url}{filename}"
     df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
@@ -53,7 +53,7 @@ def get_news(api_key, q, category=""):
 
 api_key = 'c9c5cccd294f4fb2a51ced5ed618de86'  # Use your real API key
 
-# Setup tabs
+# Configuration des onglets
 tabs = st.tabs(["Data View", "Investment Advice", "Telegram Access", "Sentiment Analysis"])
 
 with tabs[0]:
@@ -72,29 +72,27 @@ with tabs[0]:
     crypto_news_df = get_news(api_key, option, category="cryptocurrency")
     st.dataframe(crypto_news_df)
 
-# Fetch general news once for display in other tabs
-general_news_df = get_news(api_key, "world news")  # You can adjust the query to fit your needs
-
 with tabs[1]:
     st.markdown("**Investment Advice**")
-    st.markdown("""
-    Below are some handpicked videos from YouTube that provide insightful trading advice and fundamental analyses of the cryptocurrency market.
-    """)
-    videos = {
-        "5 Altcoins To Buy NOW During This Crypto Crash": "https://www.youtube.com/watch?v=b3XoFKeEoeg",
-        "How To Invest In Crypto Full Beginners Guide": "https://www.youtube.com/watch?v=Yb6825iv0Vk",
-        "Crypto Review 2023": "https://www.youtube.com/watch?v=K8qYdD1sC7w",
-        "First step in crypto investing": "https://www.youtube.com/watch?v=WFQRXDqLUHY",
-        "Crypto Taxes": "https://www.youtube.com/watch?v=bUp4ZSC03QE"
-    }
-    for title, url in videos.items():
+    videos = [
+        ("How To Invest In Crypto Full Beginners Guide", "https://www.youtube.com/watch?v=Yb6825iv0Vk"),
+        ("First step in crypto investing", "https://www.youtube.com/watch?v=WFQRXDqLUHY"),
+        ("Crypto Review 2023", "https://www.youtube.com/watch?v=K8qYdD1sC7w"),
+        ("5 Altcoins To Buy NOW During This Crypto Crash", "https://www.youtube.com/watch?v=b3XoFKeEoeg"),
+        ("Crypto Taxes", "https://www.youtube.com/watch?v=bUp4ZSC03QE")
+    ]
+    for title, url in videos:
         st.markdown(f"### {title}")
         st.video(url)
     st.markdown("For more comprehensive advice, explore all videos on [Jungernaut's YouTube Channel](https://www.youtube.com/@Jungernaut).")
 
-    # Display general news
-    st.markdown("**Latest News**")
-    st.dataframe(general_news_df)
+    # Display crypto-specific news in this tab as well
+    st.markdown("**Latest Cryptocurrency News**")
+    investment_news_df = get_news(api_key, "cryptocurrency")  # Fetching cryptocurrency-specific news
+    st.dataframe(investment_news_df)
+
+# Fetch general news once and display in other tabs
+general_news_df = get_news(api_key, "world news")  # You can adjust the query to fit your needs
 
 with tabs[2]:
     st.markdown("**Telegram Access**")
@@ -105,4 +103,3 @@ with tabs[3]:
     st.markdown("**Sentiment Analysis**")
     st.markdown("**Latest News**")
     st.dataframe(general_news_df)
-
