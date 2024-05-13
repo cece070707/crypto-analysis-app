@@ -5,7 +5,11 @@ import plotly.graph_objs as go
 from datetime import datetime
 import requests
 import plotly.express as px
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from transformers import RobertaTokenizer, RobertaForSequenceClassification
 
+# Chargement des données Telegram
 @st.cache
 def load_telegram_data():
     files = [
@@ -15,11 +19,19 @@ def load_telegram_data():
     ]
     data_frames = []
     for file in files:
-        # Ignore the original header if present and use predefined column names
         df = pd.read_csv(file, sep=';', engine='python', names=['channel', 'text', 'sentiment_type'], header=0)
         data_frames.append(df)
     combined_df = pd.concat(data_frames, ignore_index=True)
     return combined_df
+
+# Fonction de nettoyage de texte
+def clean_text(df, text_field):
+    stop = stopwords.words('english')
+    lemmatizer = WordNetLemmatizer()
+    df[text_field] = df[text_field].fillna('').astype(str)
+    df[text_field] = df[text_field].apply(lambda x: ' '.join([lemmatizer.lemmatize(word) for word in x.split() if word not in stop]))
+    df[text_field] = df[text_field].str.replace('[^\w\s]', '', regex=True)
+    return df
 
 # Define the color mapping for sentiment display
 def apply_color(val):
