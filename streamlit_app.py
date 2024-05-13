@@ -7,16 +7,17 @@ import requests
 
 @st.cache
 def load_telegram_data():
-    path = 'Data/Telegram_sentiment.csv'
-    try:
-        df = pd.read_csv(path, error_bad_lines=False, warn_bad_lines=True, encoding='utf-8')
-        return df
-    except Exception as e:
-        st.error(f"Échec du chargement des données : {e}")
-        return pd.DataFrame()
-
-
-telegram_df = load_telegram_data()
+    files = [
+        'Data/Telegram_sentiment_bis_1.csv',
+        'Data/Telegram_sentiment_bis_2.csv',
+        'Data/Telegram_sentiment_bis_3.csv'
+    ]
+    data_frames = []
+    for file in files:
+        df = pd.read_csv(file)
+        data_frames.append(df)
+    combined_df = pd.concat(data_frames, ignore_index=True)
+    return combined_df
 
 # Define the color mapping for sentiment display
 def apply_color(val):
@@ -135,15 +136,21 @@ general_news_df = get_news(api_key, "world news")  # You can adjust the query to
 
 with tabs[2]:
     st.markdown("**Telegram Access**")
+    telegram_df = load_telegram_data()  # Charge les données
     channel_filter = st.sidebar.multiselect('Filter by Channel:', options=telegram_df['channel'].unique())
     sentiment_filter = st.sidebar.multiselect('Filter by Sentiment:', options=telegram_df['sentiment_type'].unique())
     keyword = st.sidebar.text_input("Search Keyword:")
     
+    # Appliquer les filtres
     filtered_data = filter_telegram_data(telegram_df, channel_filter, sentiment_filter, keyword)
+    
+    # Appliquer la coloration conditionnelle et afficher le DataFrame
     st.dataframe(filtered_data.style.applymap(apply_color, subset=['sentiment_type']))
     
+    # Générer et afficher le graphique de distribution des sentiments
     fig = plot_sentiment_distribution(filtered_data)
     st.plotly_chart(fig)
+
     
     # Display general news as in other tabs
     st.markdown("**General News**")
