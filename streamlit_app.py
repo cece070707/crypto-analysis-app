@@ -14,9 +14,10 @@ def load_telegram_data():
         'Data/Telegram_sentiment_bis_2.csv',
         'Data/Telegram_sentiment_bis_3.csv'
     ]
+    # Assurez-vous que toutes les données soient lues avec les mêmes noms de colonnes
     data_frames = []
     for file in files:
-        df = pd.read_csv(file, sep=';', engine='python')  # Assurez-vous d'utiliser le bon séparateur
+        df = pd.read_csv(file, sep=';', engine='python', names=['channel', 'text', 'sentiment_type'])
         data_frames.append(df)
     combined_df = pd.concat(data_frames, ignore_index=True)
     return combined_df
