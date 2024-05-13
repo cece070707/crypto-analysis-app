@@ -211,5 +211,22 @@ with tabs[2]:
     st.dataframe(general_news_df)
 
 with tabs[3]:
+    st.markdown("## Analyse de Sentiment")
+    st.markdown("**Entrez votre message pour analyser le sentiment**")
+    
+    input_utilisateur = st.text_area("Entrez votre message ici :", height=150)
+    if st.button("Analyser le Sentiment"):
+        if input_utilisateur:
+            # Exécution de l'analyse de sentiment
+            score = analyse_sentiment(input_utilisateur)
+            sentiment = etiquettes_sentiment[score]
+            couleur = couleurs_sentiment[score]
+
+            # Affichage du résultat
+            st.markdown(f"### Sentiment : {sentiment}")
+            st.markdown(f'<h3 style="{couleur}">{sentiment}</h3>', unsafe_allow_html=True)
+        else:
+            st.warning("Veuillez entrer un message à analyser.")
+
     st.markdown("**Latest News**")
     st.dataframe(general_news_df)
