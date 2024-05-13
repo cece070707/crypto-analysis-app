@@ -40,19 +40,35 @@ def filter_telegram_data(df, channel_filter, sentiment_filter, keyword):
     return df
 
 # Visualization of sentiment distribution
+# Visualization of sentiment distribution
 def plot_sentiment_distribution(df):
     if df.empty:
         st.warning("No data available to display after applying filters.")
         return None
+
+    # S'assurer que toutes les catégories de sentiments sont présentes dans les données
     sentiment_counts = df['sentiment_type'].value_counts().reset_index()
     sentiment_counts.columns = ['sentiment_type', 'count']
+
+    # Création d'un DataFrame qui contient toutes les catégories possibles
+    all_sentiments = pd.DataFrame({
+        'sentiment_type': ['POSITIVE', 'NEUTRAL', 'NEGATIVE'],
+        'count': [0, 0, 0]
+    })
+
+    # Fusionner les données pour inclure les catégories sans messages
+    sentiment_counts = pd.merge(all_sentiments, sentiment_counts, on='sentiment_type', how='left').fillna(0)
+    sentiment_counts['count'] = sentiment_counts['count_x'] + sentiment_counts['count_y']
+    sentiment_counts = sentiment_counts[['sentiment_type', 'count']]
+
+    # Génération du graphique
     fig = px.bar(sentiment_counts, x='sentiment_type', y='count', color='sentiment_type',
                  title='Distribution of Sentiment Types',
                  labels={'count': 'Number of Messages', 'sentiment_type': 'Sentiment Type'},
                  color_discrete_map={'POSITIVE': 'green', 'NEGATIVE': 'red', 'NEUTRAL': 'orange'})
+
     fig.update_layout(xaxis_title='Sentiment Type', yaxis_title='Number of Messages')
     return fig
-
 
 # Configuration de l'URL de base pour les fichiers de données et des tickers Yahoo Finance
 base_url = 'https://raw.githubusercontent.com/cece070707/crypto-analysis-app/main/Data/'
