@@ -8,6 +8,26 @@ import plotly.express as px
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from transformers import RobertaTokenizer, RobertaForSequenceClassification
+import torch
+
+# Chargement du modèle et du tokenizer pré-entraînés
+model_name = "cardiffnlp/twitter-roberta-base-sentiment"
+tokenizer = RobertaTokenizer.from_pretrained(model_name)
+model = RobertaForSequenceClassification.from_pretrained(model_name)
+
+def analyse_sentiment(texte):
+    # Encodage du texte en utilisant le tokenizer et préparation du format d'entrée que le modèle attend
+    input_encodé = tokenizer(texte, return_tensors='pt', truncation=True, max_length=512)
+    # Obtention des sorties du modèle
+    sortie = model(**input_encodé)
+    # Conversion des logits en probabilités softmax pour obtenir la probabilité la plus élevée
+    probabilités = torch.nn.functional.softmax(sortie.logits, dim=-1)
+    # Obtention de l'indice de la probabilité maximale qui correspond au sentiment prédit
+    score_sentiment = torch.argmax(probabilités, dim=-1).item()
+    return score_sentiment
+
+etiquettes_sentiment = {0: "NÉGATIF", 1: "NEUTRE", 2: "POSITIF"}
+couleurs_sentiment = {0: 'background-color: red', 1: 'background-color: orange', 2: 'background-color: green'}
 
 # Chargement des données Telegram
 @st.cache
