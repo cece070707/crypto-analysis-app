@@ -5,11 +5,16 @@ import plotly.graph_objs as go
 from datetime import datetime
 import requests
 
-# Load and cache the Telegram data
 @st.cache
 def load_telegram_data():
     path = 'Data/Telegram_sentiment.csv'
-    return pd.read_csv(path)
+    try:
+        df = pd.read_csv(path, error_bad_lines=False, warn_bad_lines=True, encoding='utf-8')
+        return df
+    except Exception as e:
+        st.error(f"Échec du chargement des données : {e}")
+        return pd.DataFrame()
+
 
 telegram_df = load_telegram_data()
 
