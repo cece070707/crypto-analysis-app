@@ -4,4 +4,4 @@ yfinance
 plotly
 nltk
 transformers
-
+torch
