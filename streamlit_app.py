@@ -196,6 +196,6 @@ with tabs[2]:
     st.dataframe(general_news_df)
 
 with tabs[3]:
-    st.markdown("**Sentiment Analysis**")
+    #st.markdown("**Sentiment Analysis**")
     st.markdown("**Latest News**")
     st.dataframe(general_news_df)
