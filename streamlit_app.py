@@ -6,7 +6,6 @@ from datetime import datetime
 import requests
 import plotly.express as px
 
-
 @st.cache
 def load_telegram_data():
     files = [
@@ -21,7 +20,6 @@ def load_telegram_data():
         data_frames.append(df)
     combined_df = pd.concat(data_frames, ignore_index=True)
     return combined_df
-
 
 # Define the color mapping for sentiment display
 def apply_color(val):
@@ -181,6 +179,5 @@ with tabs[2]:
     st.dataframe(general_news_df)
 
 with tabs[3]:
-    #st.markdown("**Sentiment Analysis**")
     st.markdown("**Latest News**")
     st.dataframe(general_news_df)
