@@ -87,7 +87,7 @@ def load_crypto_data(filename):
 
 def load_recent_data(ticker):
     end_date = datetime.now()
-    start_date = end_date - pd.DateOffset(years=2)
+    start_date = end_date - pd.DateOffset(years=5)
     data = yf.download(ticker, start=start_date, end=end_date, interval='1d')
     data.reset_index(inplace=True)
     data.rename(columns={"Date": "Date_heure", "Close": "price"}, inplace=True)
@@ -125,7 +125,7 @@ with tabs[0]:
     fig = plot_crypto_price(data, f"{option} Historical Price Over Time")
     st.plotly_chart(fig)
     recent_data = load_recent_data(ticker_map[option])
-    recent_fig = plot_crypto_price(recent_data, f"{option} Price Last 2 Years")
+    recent_fig = plot_crypto_price(recent_data, f"{option} Price Last 5 Years")
     st.plotly_chart(recent_fig)
 
     # Fetch and display crypto-specific news
