@@ -14,14 +14,13 @@ def load_telegram_data():
         'Data/Telegram_sentiment_bis_2.csv',
         'Data/Telegram_sentiment_bis_3.csv'
     ]
-    # Assurez-vous que toutes les données soient lues avec les mêmes noms de colonnes
     data_frames = []
     for file in files:
-        df = pd.read_csv(file, sep=';', engine='python', names=['channel', 'text', 'sentiment_type'])
+        # Ignore the original header if present and use predefined column names
+        df = pd.read_csv(file, sep=';', engine='python', names=['channel', 'text', 'sentiment_type'], header=0)
         data_frames.append(df)
     combined_df = pd.concat(data_frames, ignore_index=True)
     return combined_df
-
 
 
 # Define the color mapping for sentiment display
@@ -39,7 +38,6 @@ def filter_telegram_data(df, channel_filter, sentiment_filter, keyword):
         df = df[df['text'].str.contains(keyword, case=False, na=False)]
     return df
 
-# Visualization of sentiment distribution
 # Visualization of sentiment distribution
 def plot_sentiment_distribution(df):
     if df.empty:
@@ -179,19 +177,6 @@ with tabs[2]:
     else:
         st.error("Failed to generate sentiment distribution chart.")
     
-    # Display general news as in other tabs
-    #st.markdown("**General News**")
-    #st.dataframe(general_news_df)  # Assuming general_news_df is fetched elsewhere
-
-    #st.markdown("**Latest News**")
-    #st.dataframe(general_news_df)
-
-
-    
-    # Display general news as in other tabs
-    #st.markdown("**General News**")
-    #st.dataframe(general_news_df)  # Assuming general_news_df is fetched elsewhere
-
     st.markdown("**Latest News**")
     st.dataframe(general_news_df)
 
