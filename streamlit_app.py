@@ -100,7 +100,7 @@ def load_crypto_data(filename):
 def load_recent_data(ticker):
     end_date = datetime.now()
     start_date = end_date - pd.DateOffset(years=5)
-    data = yf.download(ticker, start=start_date, end=end_date, interval='1d')
+    data = yf.download(ticker, start=start_date, end=end_date, interval='1d', progress=False)
     data.reset_index(inplace=True)
     data.rename(columns={"Date": "Date_heure", "Close": "price"}, inplace=True)
     return data[['Date_heure', 'price']]
