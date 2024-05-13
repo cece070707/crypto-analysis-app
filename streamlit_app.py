@@ -174,10 +174,17 @@ with tabs[2]:
     
     # Générer et afficher le graphique de distribution des sentiments
     fig = plot_sentiment_distribution(filtered_data)
-if fig is not None:
-    st.plotly_chart(fig)
-else:
-    st.error("Failed to generate sentiment distribution chart.")
+    if fig is not None:
+        st.plotly_chart(fig)
+    else:
+        st.error("Failed to generate sentiment distribution chart.")
+    
+    # Display general news as in other tabs
+    st.markdown("**General News**")
+    st.dataframe(general_news_df)  # Assuming general_news_df is fetched elsewhere
+
+    st.markdown("**Latest News**")
+    st.dataframe(general_news_df)
 
 
     
