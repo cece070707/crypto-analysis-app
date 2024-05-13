@@ -24,9 +24,6 @@ def load_crypto_data(filename):
     df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
     df.rename(columns={df.columns[0]: 'Date_heure', df.columns[1]: 'price'}, inplace=True)
     df['Date_heure'] = pd.to_datetime(df['Date_heure'], format='%d/%m/%Y %H:%M', errors='coerce')
-    if df['Date_heure'].isna().any():
-        failed_conversions = df[df['Date_heure'].isna()]
-        st.error("Les conversions de date suivantes ont échoué (premières 5 entrées) :", failed_conversions.head())
     return df[['Date_heure', 'price']]
 
 def load_recent_data(ticker):
@@ -57,7 +54,6 @@ def get_news(api_key, q, category=""):
     response = requests.get(url)
     if response.status_code == 200:
         articles = response.json().get('articles', [])
-        # Convert to DataFrame for better display
         news_df = pd.DataFrame(articles)
         news_df = news_df[['title', 'description']]
         return news_df
@@ -88,17 +84,17 @@ with tabs[0]:
     crypto_news_df = get_news(api_key, option, category="cryptocurrency")
     st.dataframe(crypto_news_df)
 
+# Fetch general news once and display in other tabs
+general_news_df = get_news(api_key, "world news")  # You can change "world news" to any general topic
+
 with tabs[1]:
-    st.markdown("**Latest News on Investment Advice**")
-    investment_news_df = get_news(api_key, "investment")
-    st.dataframe(investment_news_df)
+    st.markdown("**Latest News**")
+    st.dataframe(general_news_df)
 
 with tabs[2]:
-    st.markdown("**Latest News on Telegram Access**")
-    telegram_news_df = get_news(api_key, "telegram")
-    st.dataframe(telegram_news_df)
+    st.markdown("**Latest News**")
+    st.dataframe(general_news_df)
 
 with tabs[3]:
-    st.markdown("**Latest News on Sentiment Analysis**")
-    sentiment_news_df = get_news(api_key, "sentiment analysis")
-    st.dataframe(sentiment_news_df)
+    st.markdown("**Latest News**")
+    st.dataframe(general_news_df)
