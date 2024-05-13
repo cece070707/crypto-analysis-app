@@ -180,11 +180,11 @@ with tabs[2]:
         st.error("Failed to generate sentiment distribution chart.")
     
     # Display general news as in other tabs
-    st.markdown("**General News**")
-    st.dataframe(general_news_df)  # Assuming general_news_df is fetched elsewhere
+    #st.markdown("**General News**")
+    #st.dataframe(general_news_df)  # Assuming general_news_df is fetched elsewhere
 
-    st.markdown("**Latest News**")
-    st.dataframe(general_news_df)
+    #st.markdown("**Latest News**")
+    #st.dataframe(general_news_df)
 
 
     
