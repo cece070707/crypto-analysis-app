@@ -5,6 +5,40 @@ import plotly.graph_objs as go
 from datetime import datetime
 import requests
 
+# Load and cache the Telegram data
+@st.cache
+def load_telegram_data():
+    path = 'Data/Telegram_sentiment.csv'
+    return pd.read_csv(path)
+
+telegram_df = load_telegram_data()
+
+# Define the color mapping for sentiment display
+def apply_color(val):
+    colors = {'NEGATIVE': 'background-color: red', 'NEUTRAL': 'background-color: orange', 'POSITIVE': 'background-color: green'}
+    return colors.get(val, '')
+
+# Filter and search functionality for Telegram messages
+def filter_telegram_data(df, channel_filter, sentiment_filter, keyword):
+    if channel_filter:
+        df = df[df['channel'].isin(channel_filter)]
+    if sentiment_filter:
+        df = df[df['sentiment_type'].isin(sentiment_filter)]
+    if keyword:
+        df = df[df['text'].str.contains(keyword, case=False, na=False)]
+    return df
+
+# Visualization of sentiment distribution
+def plot_sentiment_distribution(df):
+    sentiment_counts = df['sentiment_type'].value_counts().reset_index()
+    sentiment_counts.columns = ['sentiment_type', 'count']
+    fig = px.bar(sentiment_counts, x='sentiment_type', y='count', color='sentiment_type',
+                 title='Distribution of Sentiment Types',
+                 labels={'count': 'Number of Messages', 'sentiment_type': 'Sentiment Type'},
+                 color_discrete_map={'POSITIVE': 'green', 'NEGATIVE': 'red', 'NEUTRAL': 'orange'})
+    fig.update_layout(xaxis_title='Sentiment Type', yaxis_title='Number of Messages')
+    return fig
+
 # Configuration de l'URL de base pour les fichiers de données et des tickers Yahoo Finance
 base_url = 'https://raw.githubusercontent.com/cece070707/crypto-analysis-app/main/Data/'
 ticker_map = {
@@ -96,6 +130,20 @@ general_news_df = get_news(api_key, "world news")  # You can adjust the query to
 
 with tabs[2]:
     st.markdown("**Telegram Access**")
+    channel_filter = st.sidebar.multiselect('Filter by Channel:', options=telegram_df['channel'].unique())
+    sentiment_filter = st.sidebar.multiselect('Filter by Sentiment:', options=telegram_df['sentiment_type'].unique())
+    keyword = st.sidebar.text_input("Search Keyword:")
+    
+    filtered_data = filter_telegram_data(telegram_df, channel_filter, sentiment_filter, keyword)
+    st.dataframe(filtered_data.style.applymap(apply_color, subset=['sentiment_type']))
+    
+    fig = plot_sentiment_distribution(filtered_data)
+    st.plotly_chart(fig)
+    
+    # Display general news as in other tabs
+    st.markdown("**General News**")
+    st.dataframe(general_news_df)  # Assuming general_news_df is fetched elsewhere
+
     st.markdown("**Latest News**")
     st.dataframe(general_news_df)
 
