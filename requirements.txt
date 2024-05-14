@@ -4,6 +4,5 @@ yfinance
 plotly
 nltk
 transformers>=4.0.0
-torch==1.13.0
-torchvision>=0.8.2
-torchaudio>=0.7.2
+torch==2.3.0
+torchvision==0.18.0
