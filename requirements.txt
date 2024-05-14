@@ -3,7 +3,7 @@ pandas
 yfinance
 plotly
 nltk
-transformers
-torch==1.11.0+cpu
-torchvision
-torchaudio
+transformers>=4.0.0
+torch>=1.7.1
+torchvision>=0.8.2
+torchaudio>=0.7.2
