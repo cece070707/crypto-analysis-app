@@ -3,6 +3,7 @@ pandas
 yfinance
 plotly
 nltk
-transformers>=4.0.0
-torch==2.3.0
-torchvision==0.18.0
+transformers
+torch
+torchvision
+
