@@ -2,8 +2,7 @@ streamlit
 pandas
 yfinance
 plotly
+requests
 nltk
 transformers
 torch
-torchvision
-
