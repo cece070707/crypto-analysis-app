@@ -13,6 +13,12 @@ try:
     from transformers import RobertaTokenizer, RobertaForSequenceClassification
     import torch
 
+    # Vérification de l'installation de PyTorch
+    if torch.cuda.is_available():
+        st.write("CUDA est disponible. PyTorch utilise le GPU.")
+    else:
+        st.write("CUDA n'est pas disponible. PyTorch utilise le CPU.")
+
     # Chargement du modèle et du tokenizer pré-entraînés
     model_name = "cardiffnlp/twitter-roberta-base-sentiment"
     tokenizer = RobertaTokenizer.from_pretrained(model_name)
@@ -211,4 +217,3 @@ with tabs[3]:
 
     st.markdown("**Dernières Actualités**")
     st.dataframe(general_news_df)
-
