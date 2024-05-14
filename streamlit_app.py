@@ -131,6 +131,9 @@ api_key = 'c9c5cccd294f4fb2a51ced5ed618de86'  # Use your real API key
 def analyze_sentiment(text):
     model_name = "cardiffnlp/twitter-roberta-base-sentiment"
     try:
+        import torch  # Ensure torch is imported
+        from transformers import RobertaTokenizer, RobertaForSequenceClassification
+        
         tokenizer = RobertaTokenizer.from_pretrained(model_name)
         model = RobertaForSequenceClassification.from_pretrained(model_name)
     except ImportError as e:
