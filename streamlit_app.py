@@ -130,8 +130,12 @@ api_key = 'c9c5cccd294f4fb2a51ced5ed618de86'  # Use your real API key
 # Fonction d'analyse de sentiment
 def analyze_sentiment(text):
     model_name = "cardiffnlp/twitter-roberta-base-sentiment"
-    tokenizer = RobertaTokenizer.from_pretrained(model_name)
-    model = RobertaForSequenceClassification.from_pretrained(model_name)
+    try:
+        tokenizer = RobertaTokenizer.from_pretrained(model_name)
+        model = RobertaForSequenceClassification.from_pretrained(model_name)
+    except ImportError as e:
+        st.error(f"Failed to load model: {str(e)}")
+        return None
 
     inputs = tokenizer(text, return_tensors="pt")
     with torch.no_grad():
@@ -211,11 +215,13 @@ with tabs[3]:
     if st.button("Analyze"):
         if user_input:
             sentiment = analyze_sentiment(user_input)
-            color_map = {"NEGATIVE": "red", "NEUTRAL": "orange", "POSITIVE": "green"}
-            st.markdown(f"<span style='color:{color_map[sentiment]};'>{sentiment}</span>", unsafe_allow_html=True)
+            if sentiment:
+                color_map = {"NEGATIVE": "red", "NEUTRAL": "orange", "POSITIVE": "green"}
+                st.markdown(f"<span style='color:{color_map[sentiment]};'>{sentiment}</span>", unsafe_allow_html=True)
+            else:
+                st.error("Sentiment analysis failed.")
         else:
             st.warning("Please enter a message to analyze.")
     
     st.markdown("**Latest News**")
     st.dataframe(general_news_df)
-
