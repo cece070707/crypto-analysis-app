@@ -141,6 +141,7 @@ def analyze_sentiment(text):
 tabs = st.tabs(["Data View", "Investment Advice", "Telegram Access", "Sentiment Analysis"])
 
 with tabs[0]:
+    st.title("Crypto Analysis App")
     st.write('This database has been utilized to study the various fluctuations in the price of this cryptocurrency.')
     option = st.selectbox('Which cryptocurrency data would you like to see?', list(ticker_map.keys()))
     data = load_crypto_data(f"{option.replace(' ', '_')}.csv")
@@ -157,6 +158,7 @@ with tabs[0]:
     st.dataframe(crypto_news_df)
 
 with tabs[1]:
+    st.title("Crypto Analysis App")
     st.markdown("**Investment Advice**")
     videos = [
         ("How To Invest In Crypto Full Beginners Guide", "https://www.youtube.com/watch?v=Yb6825iv0Vk"),
@@ -179,6 +181,7 @@ with tabs[1]:
 general_news_df = get_news(api_key, "world news")
 
 with tabs[2]:
+    st.title("Crypto Analysis App")
     st.markdown("**Telegram Access**")
     telegram_df = load_telegram_data()
     channel_filter = st.sidebar.multiselect('Filter by Channel:', options=telegram_df['channel'].unique())
@@ -198,6 +201,7 @@ with tabs[2]:
     st.dataframe(general_news_df)
 
 with tabs[3]:
+    st.title("Crypto Analysis App")
     st.markdown("**Sentiment Analysis**")
     user_input = st.text_area("Enter your message:")
     if st.button("Analyze"):
