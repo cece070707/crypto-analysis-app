@@ -8,9 +8,10 @@ import plotly.express as px
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from transformers import RobertaTokenizer, RobertaForSequenceClassification
+import torch
 
 # Chargement des données Telegram
-@st.cache
+@st.cache_data
 def load_telegram_data():
     files = [
         'Data/Telegram_sentiment_bis_1.csv',
@@ -126,6 +127,20 @@ def get_news(api_key, q, category=""):
 
 api_key = 'c9c5cccd294f4fb2a51ced5ed618de86'  # Use your real API key
 
+# Fonction d'analyse de sentiment
+def analyze_sentiment(text):
+    model_name = "cardiffnlp/twitter-roberta-base-sentiment"
+    tokenizer = RobertaTokenizer.from_pretrained(model_name)
+    model = RobertaForSequenceClassification.from_pretrained(model_name)
+
+    inputs = tokenizer(text, return_tensors="pt")
+    with torch.no_grad():
+        outputs = model(**inputs)
+    scores = outputs.logits[0]
+    labels = ["NEGATIVE", "NEUTRAL", "POSITIVE"]
+    _, predicted_class = torch.max(scores, dim=0)
+    return labels[predicted_class]
+
 # Configuration des onglets
 tabs = st.tabs(["Data View", "Investment Advice", "Telegram Access", "Sentiment Analysis"])
 
@@ -191,5 +206,16 @@ with tabs[2]:
     st.dataframe(general_news_df)
 
 with tabs[3]:
+    st.markdown("**Sentiment Analysis**")
+    user_input = st.text_area("Enter your message:")
+    if st.button("Analyze"):
+        if user_input:
+            sentiment = analyze_sentiment(user_input)
+            color_map = {"NEGATIVE": "red", "NEUTRAL": "orange", "POSITIVE": "green"}
+            st.markdown(f"<span style='color:{color_map[sentiment]};'>{sentiment}</span>", unsafe_allow_html=True)
+        else:
+            st.warning("Please enter a message to analyze.")
+    
     st.markdown("**Latest News**")
     st.dataframe(general_news_df)
+
