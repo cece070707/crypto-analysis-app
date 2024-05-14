@@ -55,22 +55,18 @@ def plot_sentiment_distribution(df):
         st.warning("No data available to display after applying filters.")
         return None
 
-    # S'assurer que toutes les catégories de sentiments sont présentes dans les données
     sentiment_counts = df['sentiment_type'].value_counts().reset_index()
     sentiment_counts.columns = ['sentiment_type', 'count']
 
-    # Création d'un DataFrame qui contient toutes les catégories possibles
     all_sentiments = pd.DataFrame({
         'sentiment_type': ['POSITIVE', 'NEUTRAL', 'NEGATIVE'],
         'count': [0, 0, 0]
     })
 
-    # Fusionner les données pour inclure les catégories sans messages
     sentiment_counts = pd.merge(all_sentiments, sentiment_counts, on='sentiment_type', how='left').fillna(0)
     sentiment_counts['count'] = sentiment_counts['count_x'] + sentiment_counts['count_y']
     sentiment_counts = sentiment_counts[['sentiment_type', 'count']]
 
-    # Génération du graphique
     fig = px.bar(sentiment_counts, x='sentiment_type', y='count', color='sentiment_type',
                  title='Distribution of Sentiment Types',
                  labels={'count': 'Number of Messages', 'sentiment_type': 'Sentiment Type'},
@@ -176,26 +172,22 @@ with tabs[1]:
 
     # Display crypto-specific news in this tab as well
     st.markdown("**Latest Cryptocurrency News**")
-    investment_news_df = get_news(api_key, "cryptocurrency")  # Fetching cryptocurrency-specific news
+    investment_news_df = get_news(api_key, "cryptocurrency")
     st.dataframe(investment_news_df)
 
 # Fetch general news once and display in other tabs
-general_news_df = get_news(api_key, "world news")  # You can adjust the query to fit your needs
+general_news_df = get_news(api_key, "world news")
 
 with tabs[2]:
     st.markdown("**Telegram Access**")
-    telegram_df = load_telegram_data()  # Charge les données
+    telegram_df = load_telegram_data()
     channel_filter = st.sidebar.multiselect('Filter by Channel:', options=telegram_df['channel'].unique())
     sentiment_filter = st.sidebar.multiselect('Filter by Sentiment:', options=telegram_df['sentiment_type'].unique())
     keyword = st.sidebar.text_input("Search Keyword:")
     
-    # Appliquer les filtres
     filtered_data = filter_telegram_data(telegram_df, channel_filter, sentiment_filter, keyword)
-    
-    # Appliquer la coloration conditionnelle et afficher le DataFrame
     st.dataframe(filtered_data.style.applymap(apply_color, subset=['sentiment_type']))
     
-    # Générer et afficher le graphique de distribution des sentiments
     fig = plot_sentiment_distribution(filtered_data)
     if fig is not None:
         st.plotly_chart(fig)
