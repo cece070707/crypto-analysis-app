@@ -7,44 +7,45 @@ import requests
 import plotly.express as px
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-from transformers import RobertaTokenizer, RobertaForSequenceClassification
-import torch
 
-# Chargement du modèle et du tokenizer pré-entraînés
-model_name = "cardiffnlp/twitter-roberta-base-sentiment"
-tokenizer = RobertaTokenizer.from_pretrained(model_name)
-model = RobertaForSequenceClassification.from_pretrained(model_name)
+# Importation conditionnelle pour transformers
+try:
+    from transformers import RobertaTokenizer, RobertaForSequenceClassification
+    import torch
 
-def analyse_sentiment(texte):
-    # Encodage du texte en utilisant le tokenizer et préparation du format d'entrée que le modèle attend
-    input_encodé = tokenizer(texte, return_tensors='pt', truncation=True, max_length=512)
-    # Obtention des sorties du modèle
-    sortie = model(**input_encodé)
-    # Conversion des logits en probabilités softmax pour obtenir la probabilité la plus élevée
-    probabilités = torch.nn.functional.softmax(sortie.logits, dim=-1)
-    # Obtention de l'indice de la probabilité maximale qui correspond au sentiment prédit
-    score_sentiment = torch.argmax(probabilités, dim=-1).item()
-    return score_sentiment
+    # Chargement du modèle et du tokenizer pré-entraînés
+    model_name = "cardiffnlp/twitter-roberta-base-sentiment"
+    tokenizer = RobertaTokenizer.from_pretrained(model_name)
+    model = RobertaForSequenceClassification.from_pretrained(model_name)
 
-etiquettes_sentiment = {0: "NÉGATIF", 1: "NEUTRE", 2: "POSITIF"}
-couleurs_sentiment = {0: 'background-color: red', 1: 'background-color: orange', 2: 'background-color: green'}
+    def analyse_sentiment(texte):
+        input_encodé = tokenizer(texte, return_tensors='pt', truncation=True, max_length=512)
+        sortie = model(**input_encodé)
+        probabilités = torch.nn.functional.softmax(sortie.logits, dim=-1)
+        score_sentiment = torch.argmax(probabilités, dim=-1).item()
+        return score_sentiment
 
-# Chargement des données Telegram
+    etiquettes_sentiment = {0: "NÉGATIF", 1: "NEUTRE", 2: "POSITIF"}
+    couleurs_sentiment = {0: 'background-color: red', 1: 'background-color: orange', 2: 'background-color: green'}
+
+except ImportError as e:
+    st.error(f"Échec de l'importation des bibliothèques nécessaires pour l'analyse de sentiment : {e}")
+    st.stop()
+
 @st.cache
 def load_telegram_data():
-    files = [
+    fichiers = [
         'Data/Telegram_sentiment_bis_1.csv',
         'Data/Telegram_sentiment_bis_2.csv',
         'Data/Telegram_sentiment_bis_3.csv'
     ]
     data_frames = []
-    for file in files:
-        df = pd.read_csv(file, sep=';', engine='python', names=['channel', 'text', 'sentiment_type'], header=0)
+    for fichier in fichiers:
+        df = pd.read_csv(fichier, sep=';', engine='python', names=['channel', 'text', 'sentiment_type'], header=0)
         data_frames.append(df)
     combined_df = pd.concat(data_frames, ignore_index=True)
     return combined_df
 
-# Fonction de nettoyage de texte
 def clean_text(df, text_field):
     stop = stopwords.words('english')
     lemmatizer = WordNetLemmatizer()
@@ -53,12 +54,10 @@ def clean_text(df, text_field):
     df[text_field] = df[text_field].str.replace('[^\w\s]', '', regex=True)
     return df
 
-# Define the color mapping for sentiment display
 def apply_color(val):
     colors = {'NEGATIVE': 'background-color: red', 'NEUTRAL': 'background-color: orange', 'POSITIVE': 'background-color: green'}
     return colors.get(val, '')
 
-# Filter and search functionality for Telegram messages
 def filter_telegram_data(df, channel_filter, sentiment_filter, keyword):
     if channel_filter:
         df = df[df['channel'].isin(channel_filter)]
@@ -68,37 +67,31 @@ def filter_telegram_data(df, channel_filter, sentiment_filter, keyword):
         df = df[df['text'].str.contains(keyword, case=False, na=False)]
     return df
 
-# Visualization of sentiment distribution
 def plot_sentiment_distribution(df):
     if df.empty:
-        st.warning("No data available to display after applying filters.")
+        st.warning("Aucune donnée disponible à afficher après l'application des filtres.")
         return None
 
-    # S'assurer que toutes les catégories de sentiments sont présentes dans les données
     sentiment_counts = df['sentiment_type'].value_counts().reset_index()
     sentiment_counts.columns = ['sentiment_type', 'count']
 
-    # Création d'un DataFrame qui contient toutes les catégories possibles
     all_sentiments = pd.DataFrame({
         'sentiment_type': ['POSITIVE', 'NEUTRAL', 'NEGATIVE'],
         'count': [0, 0, 0]
     })
 
-    # Fusionner les données pour inclure les catégories sans messages
     sentiment_counts = pd.merge(all_sentiments, sentiment_counts, on='sentiment_type', how='left').fillna(0)
     sentiment_counts['count'] = sentiment_counts['count_x'] + sentiment_counts['count_y']
     sentiment_counts = sentiment_counts[['sentiment_type', 'count']]
 
-    # Génération du graphique
     fig = px.bar(sentiment_counts, x='sentiment_type', y='count', color='sentiment_type',
-                 title='Distribution of Sentiment Types',
-                 labels={'count': 'Number of Messages', 'sentiment_type': 'Sentiment Type'},
+                 title='Distribution des types de sentiments',
+                 labels={'count': 'Nombre de messages', 'sentiment_type': 'Type de sentiment'},
                  color_discrete_map={'POSITIVE': 'green', 'NEGATIVE': 'red', 'NEUTRAL': 'orange'})
 
-    fig.update_layout(xaxis_title='Sentiment Type', yaxis_title='Number of Messages')
+    fig.update_layout(xaxis_title='Type de sentiment', yaxis_title='Nombre de messages')
     return fig
 
-# Configuration de l'URL de base pour les fichiers de données et des tickers Yahoo Finance
 base_url = 'https://raw.githubusercontent.com/cece070707/crypto-analysis-app/main/Data/'
 ticker_map = {
     'ADA Cardano': 'ADA-USD',
@@ -109,7 +102,6 @@ ticker_map = {
     'XRP Ripple': 'XRP-USD'
 }
 
-# Fonctions de traitement des données, chargement des données récentes et affichage des prix
 def load_crypto_data(filename):
     url = f"{base_url}{filename}"
     df = pd.read_csv(url, delimiter=';', decimal=',', skiprows=1)
@@ -127,7 +119,7 @@ def load_recent_data(ticker):
 
 def plot_crypto_price(data, title):
     fig = go.Figure(data=[go.Scatter(x=data['Date_heure'], y=data['price'], mode='lines')])
-    fig.update_layout(title=title, xaxis_title='Date and Time', yaxis_title='Price (USD)', xaxis_rangeslider_visible=True)
+    fig.update_layout(title=title, xaxis_title='Date et Heure', yaxis_title='Prix (USD)', xaxis_rangeslider_visible=True)
     return fig
 
 def get_news(api_key, q, category=""):
@@ -141,73 +133,65 @@ def get_news(api_key, q, category=""):
         news_df = news_df[['title', 'description']]
         return news_df
     else:
-        st.error(f"Failed to fetch news: HTTP {response.status_code}")
+        st.error(f"Échec de la récupération des actualités : HTTP {response.status_code}")
         return pd.DataFrame()
 
-api_key = 'c9c5cccd294f4fb2a51ced5ed618de86'  # Use your real API key
+api_key = 'c9c5cccd294f4fb2a51ced5ed618de86'  # Utilisez votre véritable clé API
 
-# Configuration des onglets
-tabs = st.tabs(["Data View", "Investment Advice", "Telegram Access", "Sentiment Analysis"])
+tabs = st.tabs(["Vue des données", "Conseils d'investissement", "Accès Telegram", "Analyse de Sentiment"])
 
 with tabs[0]:
-    st.write('This database has been utilized to study the various fluctuations in the price of this cryptocurrency.')
-    option = st.selectbox('Which cryptocurrency data would you like to see?', list(ticker_map.keys()))
+    st.write('Cette base de données a été utilisée pour étudier les différentes fluctuations du prix de cette cryptomonnaie.')
+    option = st.selectbox('Quelle donnée de cryptomonnaie souhaitez-vous voir ?', list(ticker_map.keys()))
     data = load_crypto_data(f"{option.replace(' ', '_')}.csv")
     st.dataframe(data)
-    fig = plot_crypto_price(data, f"{option} Historical Price Over Time")
+    fig = plot_crypto_price(data, f"{option} Prix Historique au Fil du Temps")
     st.plotly_chart(fig)
     recent_data = load_recent_data(ticker_map[option])
-    recent_fig = plot_crypto_price(recent_data, f"{option} Price Last 5 Years")
+    recent_fig = plot_crypto_price(recent_data, f"{option} Prix des 5 Dernières Années")
     st.plotly_chart(recent_fig)
 
-    # Fetch and display crypto-specific news
-    st.markdown("**Latest Cryptocurrency News**")
+    st.markdown("**Dernières Actualités sur les Cryptomonnaies**")
     crypto_news_df = get_news(api_key, option, category="cryptocurrency")
     st.dataframe(crypto_news_df)
 
 with tabs[1]:
-    st.markdown("**Investment Advice**")
+    st.markdown("**Conseils d'investissement**")
     videos = [
-        ("How To Invest In Crypto Full Beginners Guide", "https://www.youtube.com/watch?v=Yb6825iv0Vk"),
-        ("First step in crypto investing", "https://www.youtube.com/watch?v=WFQRXDqLUHY"),
-        ("Crypto Review 2023", "https://www.youtube.com/watch?v=K8qYdD1sC7w"),
-        ("5 Altcoins To Buy NOW During This Crypto Crash", "https://www.youtube.com/watch?v=b3XoFKeEoeg"),
-        ("Crypto Taxes", "https://www.youtube.com/watch?v=bUp4ZSC03QE")
+        ("Comment investir dans les cryptomonnaies - Guide complet pour débutants", "https://www.youtube.com/watch?v=Yb6825iv0Vk"),
+        ("Première étape pour investir dans les cryptomonnaies", "https://www.youtube.com/watch?v=WFQRXDqLUHY"),
+        ("Revue des cryptomonnaies 2023", "https://www.youtube.com/watch?v=K8qYdD1sC7w"),
+        ("5 Altcoins à acheter MAINTENANT pendant cette chute des cryptomonnaies", "https://www.youtube.com/watch?v=b3XoFKeEoeg"),
+        ("Les taxes sur les cryptomonnaies", "https://www.youtube.com/watch?v=bUp4ZSC03QE")
     ]
     for title, url in videos:
         st.markdown(f"### {title}")
         st.video(url)
-    st.markdown("For more comprehensive advice, explore all videos on [Jungernaut's YouTube Channel](https://www.youtube.com/@Jungernaut).")
+    st.markdown("Pour des conseils plus complets, explorez toutes les vidéos sur [la chaîne YouTube de Jungernaut](https://www.youtube.com/@Jungernaut).")
 
-    # Display crypto-specific news in this tab as well
-    st.markdown("**Latest Cryptocurrency News**")
-    investment_news_df = get_news(api_key, "cryptocurrency")  # Fetching cryptocurrency-specific news
+    st.markdown("**Dernières Actualités sur les Cryptomonnaies**")
+    investment_news_df = get_news(api_key, "cryptocurrency")
     st.dataframe(investment_news_df)
 
-# Fetch general news once and display in other tabs
-general_news_df = get_news(api_key, "world news")  # You can adjust the query to fit your needs
+general_news_df = get_news(api_key, "world news")
 
 with tabs[2]:
-    st.markdown("**Telegram Access**")
-    telegram_df = load_telegram_data()  # Charge les données
-    channel_filter = st.sidebar.multiselect('Filter by Channel:', options=telegram_df['channel'].unique())
-    sentiment_filter = st.sidebar.multiselect('Filter by Sentiment:', options=telegram_df['sentiment_type'].unique())
-    keyword = st.sidebar.text_input("Search Keyword:")
+    st.markdown("**Accès Telegram**")
+    telegram_df = load_telegram_data()
+    channel_filter = st.sidebar.multiselect('Filtrer par Canal :', options=telegram_df['channel'].unique())
+    sentiment_filter = st.sidebar.multiselect('Filtrer par Sentiment :', options=telegram_df['sentiment_type'].unique())
+    keyword = st.sidebar.text_input("Rechercher un Mot-Clé :")
     
-    # Appliquer les filtres
     filtered_data = filter_telegram_data(telegram_df, channel_filter, sentiment_filter, keyword)
-    
-    # Appliquer la coloration conditionnelle et afficher le DataFrame
     st.dataframe(filtered_data.style.applymap(apply_color, subset=['sentiment_type']))
     
-    # Générer et afficher le graphique de distribution des sentiments
     fig = plot_sentiment_distribution(filtered_data)
     if fig is not None:
         st.plotly_chart(fig)
     else:
-        st.error("Failed to generate sentiment distribution chart.")
+        st.error("Échec de la génération du graphique de distribution des sentiments.")
     
-    st.markdown("**Latest News**")
+    st.markdown("**Dernières Actualités**")
     st.dataframe(general_news_df)
 
 with tabs[3]:
@@ -217,16 +201,14 @@ with tabs[3]:
     input_utilisateur = st.text_area("Entrez votre message ici :", height=150)
     if st.button("Analyser le Sentiment"):
         if input_utilisateur:
-            # Exécution de l'analyse de sentiment
             score = analyse_sentiment(input_utilisateur)
             sentiment = etiquettes_sentiment[score]
             couleur = couleurs_sentiment[score]
-
-            # Affichage du résultat
             st.markdown(f"### Sentiment : {sentiment}")
             st.markdown(f'<h3 style="{couleur}">{sentiment}</h3>', unsafe_allow_html=True)
         else:
             st.warning("Veuillez entrer un message à analyser.")
 
-    st.markdown("**Latest News**")
+    st.markdown("**Dernières Actualités**")
     st.dataframe(general_news_df)
+
